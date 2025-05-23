@@ -1,4 +1,3 @@
-// src/app/scan/[id]/page.jsx
 'use client'
 
 import { useEffect } from 'react'
@@ -8,35 +7,36 @@ import { db } from '../../../lib/firebaseConfig'
 
 export default function ScanPage({ params }) {
   const router = useRouter()
+  const { id } = params
 
   useEffect(() => {
-    const handleScan = async () => {
-      const qrRef = doc(db, 'qrcodes', params.id)
-      const qrSnap = await getDoc(qrRef)
+    const handleRedirect = async () => {
+      if (!id) return
 
-      if (!qrSnap.exists()) {
-        console.error('QR no encontrado')
-        router.push('/') // redirige a home si no existe
-        return
+      const docRef = doc(db, 'qrcodes', id)
+      const docSnap = await getDoc(docRef)
+
+      if (docSnap.exists()) {
+        const data = docSnap.data()
+
+        // Actualiza el contador
+        await updateDoc(docRef, {
+          scanCount: increment(1),
+        })
+
+        // Redirige al link original
+        window.location.href = data.content
+      } else {
+        router.push('/') // Si el QR no existe
       }
-
-      const qrData = qrSnap.data()
-
-      // Actualiza contador
-      await updateDoc(qrRef, {
-        scanCount: increment(1),
-      })
-
-      // Redirige al link original
-      window.location.href = qrData.content
     }
 
-    handleScan()
-  }, [params.id, router])
+    handleRedirect()
+  }, [id, router])
 
   return (
     <div className="p-6 text-center">
-      <p>Redirigiendo...</p>
+      <p className="text-lg font-semibold">Redirigiendo...</p>
     </div>
   )
 }

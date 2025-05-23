@@ -60,8 +60,11 @@ export default function DashboardPage() {
             <li key={qr.id} className="p-4 bg-gray-100 rounded shadow">
               <h3 className="font-bold">{qr.title}</h3>
               <p>{qr.content}</p>
-              <div className="my-2"> 
-              <QRCodeSVG value={`${window.location.origin}/scan/${qr.id}`} size={128} />
+              <div className="my-2">
+                <QRCodeSVG
+                  value={`https://qr-generator-oxd4.vercel.app/scan/${qr.id}`}
+                  size={128}
+                />
               </div>
               <p className="text-sm text-gray-500">
                 Escaneado {qr.scanCount} veces
