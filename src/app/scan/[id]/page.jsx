@@ -1,5 +1,4 @@
 'use client'
-
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore'
@@ -18,24 +17,24 @@ export default function ScanPage({ params }) {
 
       if (docSnap.exists()) {
         const data = docSnap.data()
-
-        // Actualiza el contador
+        // Incrementar contador
         await updateDoc(docRef, {
           scanCount: increment(1),
         })
 
-        // Redirige al link original
+        // Redirigir
         window.location.href = data.content
       } else {
-        router.push('/') // Si el QR no existe
+        console.error('QR no encontrado')
+        router.push('/')
       }
     }
 
     handleRedirect()
-  }, [id, router])
+  }, [id])
 
   return (
-    <div className="p-6 text-center">
+    <div className="h-screen flex items-center justify-center">
       <p className="text-lg font-semibold">Redirigiendo...</p>
     </div>
   )
