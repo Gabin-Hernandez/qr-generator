@@ -1,4 +1,3 @@
-// src/app/scan/[id]/page.jsx
 'use client'
 
 import { useEffect } from 'react'
@@ -19,18 +18,18 @@ export default function ScanPage({ params }) {
         if (docSnap.exists()) {
           const qrData = docSnap.data()
 
-          // Incrementar contador de escaneos
+          console.log('Documento encontrado:', qrData)
+
           await updateDoc(docRef, {
             scanCount: increment(1),
           })
 
-          // Redirigir al enlace
           window.location.href = qrData.content
         } else {
-          console.error('QR no encontrado')
+          console.error('Documento no encontrado')
         }
       } catch (error) {
-        console.error('Error al redirigir:', error)
+        console.error('Error en redirección:', error)
       }
     }
 
