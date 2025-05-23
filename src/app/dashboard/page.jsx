@@ -1,72 +1,75 @@
-'use client'
-import { useEffect, useState } from 'react'
-import { db, auth } from '@/lib/firebaseConfig'
-import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore'
-import { useAuth } from '@/hooks/useAuth'
-import QRCode from 'react-qr-code'
-import { useRouter } from 'next/navigation'
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth, db } from "../../lib/firebaseConfig";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { useAuth } from "../../hooks/useAuth";
+import { QRCodeSVG } from "qrcode.react";
+import CreateQRForm from "./CreateQRForm";
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth()
-  const [qrcodes, setQrcodes] = useState([])
-  const router = useRouter()
+  const { user, loading } = useAuth();
+  const router = useRouter();
+  const [qrs, setQrs] = useState([]);
 
-  // Redirige si no hay usuario
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login')
+      router.push("/login");
     }
-  }, [user, loading])
+  }, [user, loading]);
 
-  // Obtener los QR del usuario
   useEffect(() => {
     const fetchQRCodes = async () => {
-      if (!user) return
-
-      const querySnapshot = await getDocs(collection(db, 'users', user.uid, 'qrcodes'))
-      const docs = querySnapshot.docs.map((doc) => ({
+      if (!user) return;
+      const q = query(
+        collection(db, "qrcodes"),
+        where("userId", "==", user.uid)
+      );
+      const querySnapshot = await getDocs(q);
+      const results = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-      }))
-      setQrcodes(docs)
-    }
+      }));
+      setQrs(results);
+    };
 
-    fetchQRCodes()
-  }, [user])
+    fetchQRCodes();
+  }, [user]);
 
-  // Eliminar QR
-  const handleDelete = async (id) => {
-    if (!user) return
-    await deleteDoc(doc(db, 'users', user.uid, 'qrcodes', id))
-    setQrcodes(qrcodes.filter((qr) => qr.id !== id))
-  }
-
-  // Cerrar sesión
-  const logout = async () => {
-    await auth.signOut()
-    router.push('/login')
-  }
+  const handleLogout = async () => {
+    await signOut(auth);
+    router.push("/login");
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="flex justify-between items-center mb-6">
+    <div className="p-6">
+      <div className="flex justify-between mb-4">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <button onClick={logout} className="bg-red-500 text-white px-4 py-2 rounded">Cerrar sesión</button>
+        <button onClick={handleLogout} className="text-red-600 underline">
+          Cerrar sesión
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {qrcodes.map((qr) => (
-          <div key={qr.id} className="bg-white p-4 rounded shadow">
-            <h2 className="font-semibold mb-2">{qr.title}</h2>
-            <QRCode value={`http://localhost:3000/scan/${qr.id}`} size={128} />
-            <p className="text-sm text-gray-600 mt-2">Escaneos: {qr.scans}</p>
-            <p className="text-sm text-gray-500 break-all">Destino: {qr.url}</p>
-            <button onClick={() => handleDelete(qr.id)} className="mt-3 text-red-600 hover:underline">
-              Eliminar
-            </button>
-          </div>
-        ))}
+      <CreateQRForm onCreated={() => window.location.reload()} />
+
+      <div className="mt-6">
+        <h2 className="text-lg font-semibold mb-2">Mis códigos QR:</h2>
+        <ul className="space-y-4">
+          {qrs.map((qr) => (
+            <li key={qr.id} className="p-4 bg-gray-100 rounded shadow">
+              <h3 className="font-bold">{qr.title}</h3>
+              <p>{qr.content}</p>
+              <div className="my-2"> 
+              <QRCodeSVG value={`${window.location.origin}/scan/${qr.id}`} size={128} />
+              </div>
+              <p className="text-sm text-gray-500">
+                Escaneado {qr.scanCount} veces
+              </p>
+            </li>
+          ))}
+        </ul>
       </div>
     </div>
-  )
+  );
 }

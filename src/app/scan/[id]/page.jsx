@@ -1,47 +1,42 @@
+// src/app/scan/[id]/page.jsx
 'use client'
+
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { db } from '@/lib/firebaseConfig'
-import { collectionGroup, getDocs, increment, updateDoc } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, increment } from 'firebase/firestore'
+import { db } from '../../../lib/firebaseConfig'
 
 export default function ScanPage({ params }) {
   const router = useRouter()
-  const codeId = params.id
 
   useEffect(() => {
-    const fetchAndRedirect = async () => {
-      try {
-        // Buscar en todas las subcolecciones "qrcodes"
-        const snapshot = await getDocs(collectionGroup(db, 'qrcodes'))
-        let foundDoc = null
+    const handleScan = async () => {
+      const qrRef = doc(db, 'qrcodes', params.id)
+      const qrSnap = await getDoc(qrRef)
 
-        snapshot.forEach((doc) => {
-          if (doc.id === codeId) {
-            foundDoc = doc
-          }
-        })
-
-        if (foundDoc) {
-          const docRef = foundDoc.ref
-          const { url } = foundDoc.data()
-
-          // Aumentar el contador
-          await updateDoc(docRef, {
-            scans: increment(1),
-          })
-
-          // Redirigir
-          window.location.href = url
-        } else {
-          alert('Código no encontrado')
-        }
-      } catch (err) {
-        console.error('Error al redirigir:', err)
+      if (!qrSnap.exists()) {
+        console.error('QR no encontrado')
+        router.push('/') // redirige a home si no existe
+        return
       }
+
+      const qrData = qrSnap.data()
+
+      // Actualiza contador
+      await updateDoc(qrRef, {
+        scanCount: increment(1),
+      })
+
+      // Redirige al link original
+      window.location.href = qrData.content
     }
 
-    fetchAndRedirect()
-  }, [])
+    handleScan()
+  }, [params.id, router])
 
-  return <p className="text-center mt-10 text-xl">Redirigiendo al enlace...</p>
+  return (
+    <div className="p-6 text-center">
+      <p>Redirigiendo...</p>
+    </div>
+  )
 }
