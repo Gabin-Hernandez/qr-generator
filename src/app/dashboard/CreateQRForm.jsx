@@ -33,7 +33,7 @@ export default function CreateQRForm({ onCreated }) {
         placeholder="Título del QR"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="w-full p-2 border rounded"
+        className="w-full text-black p-2 border rounded"
       />
       <input
         type="url"
