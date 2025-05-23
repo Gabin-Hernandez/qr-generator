@@ -1,24 +1,29 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { db } from '../../../lib/firebaseConfig'
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore'
 
 export default function ScanPage({ params }) {
   const router = useRouter()
-  const { id } = params
 
   useEffect(() => {
     const handleRedirect = async () => {
+      console.log('Intentando redirigir con params:', params)
+
+      if (!params?.id) {
+        console.error('No se recibió el ID en los parámetros')
+        return
+      }
+
       try {
-        const docRef = doc(db, 'qrcodes', id)
+        const docRef = doc(db, 'qrcodes', params.id)
         const docSnap = await getDoc(docRef)
 
         if (docSnap.exists()) {
           const qrData = docSnap.data()
-
-          console.log('Documento encontrado:', qrData)
+          console.log('QR encontrado:', qrData)
 
           await updateDoc(docRef, {
             scanCount: increment(1),
@@ -26,19 +31,19 @@ export default function ScanPage({ params }) {
 
           window.location.href = qrData.content
         } else {
-          console.error('Documento no encontrado')
+          console.error('QR no encontrado')
         }
       } catch (error) {
-        console.error('Error en redirección:', error)
+        console.error('Error al redirigir:', error)
       }
     }
 
     handleRedirect()
-  }, [id])
+  }, [params])
 
   return (
-    <div className="p-6 text-center">
-      <h1 className="text-xl font-semibold">Redirigiendo...</h1>
+    <div className="p-10 text-center">
+      <h1 className="text-xl font-bold">Redirigiendo...</h1>
     </div>
   )
 }
