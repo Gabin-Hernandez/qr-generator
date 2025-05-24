@@ -36,9 +36,10 @@ export default function ScanPage({ params }) {
   }, [params])
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white">
-      <div className="w-16 h-16 border-4 border-blue-500 border-dashed rounded-full animate-spin"></div>
-      <p className="mt-4 text-gray-600 text-lg">Cargando...</p>
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-indigo-700 text-white">
+      <div className="w-16 h-16 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+      <h1 className="mt-6 text-2xl font-semibold drop-shadow-lg animate-pulse">Cargando...</h1>
+      <p className="mt-2 text-sm opacity-80">Por favor espera unos segundos</p>
     </div>
   )
 }
