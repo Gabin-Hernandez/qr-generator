@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { db } from '../../../lib/firebaseConfig'
-import { doc, getDoc, updateDoc, increment } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, increment, deleteDoc } from 'firebase/firestore'
 
 export default function ScanPage({ params }) {
   const router = useRouter()
