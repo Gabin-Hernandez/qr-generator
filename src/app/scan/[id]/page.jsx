@@ -1,39 +1,49 @@
-import { doc, getDoc, updateDoc, increment } from 'firebase/firestore'
+'use client'
+
+import { useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { db } from '../../../lib/firebaseConfig'
+import { doc, getDoc, updateDoc, increment } from 'firebase/firestore'
 
-export const dynamic = 'force-dynamic'
+export default function ScanPage({ params }) {
+  const router = useRouter()
 
-export default async function ScanPage({ params }) {
-  const ref = doc(db, 'qrcodes', params.id)
-  const snap = await getDoc(ref)
+  useEffect(() => {
+    const handleRedirect = async () => {
+      console.log('Intentando redirigir con params:', params)
 
-  if (!snap.exists()) {
-    return (
-      <html>
-        <body>
-          <h1>Error: Código QR no encontrado</h1>
-        </body>
-      </html>
-    )
-  }
+      if (!params?.id) {
+        console.error('No se recibió el ID en los parámetros')
+        return
+      }
 
-  const data = snap.data()
+      try {
+        const docRef = doc(db, 'qrcodes', params.id)
+        const docSnap = await getDoc(docRef)
 
-  // Actualiza contador
-  await updateDoc(ref, {
-    scanCount: increment(1),
-  })
+        if (docSnap.exists()) {
+          const qrData = docSnap.data()
+          console.log('QR encontrado:', qrData)
 
-  // Devuelve una página HTML con redirección automática vía meta tag
+          await updateDoc(docRef, {
+            scanCount: increment(1),
+          })
+
+          location.replace(qrData.content)
+        } else {
+          console.error('QR no encontrado')
+        }
+      } catch (error) {
+        console.error('Error al redirigir:', error)
+      }
+    }
+
+    handleRedirect()
+  }, [params])
+
   return (
-    <html>
-      <head>
-        <meta httpEquiv="refresh" content={`0; url=${data.content}`} />
-        <title>Redirigiendo...</title>
-      </head>
-      <body>
-        <p>Redirigiendo a <a href={data.content}>{data.content}</a></p>
-      </body>
-    </html>
+    <div className="p-10 text-center">
+      <h1 className="text-xl font-bold">Redirigiendo...</h1>
+    </div>
   )
 }
