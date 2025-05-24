@@ -1,49 +1,39 @@
-'use client'
-
-import { useEffect } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { db } from '../../../lib/firebaseConfig'
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore'
+import { db } from '../../../lib/firebaseConfig'
 
-export default function ScanPage({ params }) {
-  const router = useRouter()
+export const dynamic = 'force-dynamic'
 
-  useEffect(() => {
-    const handleRedirect = async () => {
-      console.log('Intentando redirigir con params:', params)
+export default async function ScanPage({ params }) {
+  const ref = doc(db, 'qrcodes', params.id)
+  const snap = await getDoc(ref)
 
-      if (!params?.id) {
-        console.error('No se recibió el ID en los parámetros')
-        return
-      }
+  if (!snap.exists()) {
+    return (
+      <html>
+        <body>
+          <h1>Error: Código QR no encontrado</h1>
+        </body>
+      </html>
+    )
+  }
 
-      try {
-        const docRef = doc(db, 'qrcodes', params.id)
-        const docSnap = await getDoc(docRef)
+  const data = snap.data()
 
-        if (docSnap.exists()) {
-          const qrData = docSnap.data()
-          console.log('QR encontrado:', qrData)
+  // Actualiza contador
+  await updateDoc(ref, {
+    scanCount: increment(1),
+  })
 
-          await updateDoc(docRef, {
-            scanCount: increment(1),
-          })
-
-          location.replace(qrData.content)
-        } else {
-          console.error('QR no encontrado')
-        }
-      } catch (error) {
-        console.error('Error al redirigir:', error)
-      }
-    }
-
-    handleRedirect()
-  }, [params])
-
+  // Devuelve una página HTML con redirección automática vía meta tag
   return (
-    <div className="p-10 text-center">
-      <h1 className="text-xl font-bold">Redirigiendo...</h1>
-    </div>
+    <html>
+      <head>
+        <meta httpEquiv="refresh" content={`0; url=${data.content}`} />
+        <title>Redirigiendo...</title>
+      </head>
+      <body>
+        <p>Redirigiendo a <a href={data.content}>{data.content}</a></p>
+      </body>
+    </html>
   )
 }
