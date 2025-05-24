@@ -29,7 +29,7 @@ export default function ScanPage({ params }) {
             scanCount: increment(1),
           })
 
-          window.location.href = qrData.content
+          location.replace(qrData.content)
         } else {
           console.error('QR no encontrado')
         }
